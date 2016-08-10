@@ -6,7 +6,9 @@ This is a little module to help you get some weather in your Powershell prompt!
 
 # Install
 
-TODO PS gallery
+From the [PowerShell Gallery](https://www.powershellgallery.com):
+
+    PS> Install-Module OpenWeatherMap
 
 # Usage
 
