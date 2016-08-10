@@ -2,7 +2,7 @@
 
 This is a little module to help you get some weather in your Powershell prompt!
 
-TODO image
+![Example prompt](https://cloud.githubusercontent.com/assets/563819/17570839/a00433aa-5f13-11e6-88d6-b6b75d43dfd5.png)
 
 # Install
 
