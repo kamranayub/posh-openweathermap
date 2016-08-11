@@ -36,7 +36,7 @@ Function Get-WeatherCity([string]$City, [string]$ApiKey)
 {
     return Invoke-WebRequest `
         -UseBasicParsing `
-        -Uri "http://api.openweathermap.org/data/2.5/forecast/city?q=$City&APPID=$ApiKey&units=imperial" | ConvertFrom-Json
+        -Uri "http://api.openweathermap.org/data/2.5/weather?q=$City&APPID=$ApiKey&units=imperial" | ConvertFrom-Json
 }
 
 <#
@@ -48,7 +48,7 @@ Function Get-WeatherCity([string]$City, [string]$ApiKey)
 #>
 Function Get-WeatherCityCurrentTemperature($WeatherCity) 
 {
-    return "$($WeatherCity.list[0].main.temp)°F"
+    return "$($WeatherCity.main.temp)°F"
 }
 
 <#
@@ -60,5 +60,5 @@ Function Get-WeatherCityCurrentTemperature($WeatherCity)
 #>
 Function Get-WeatherCityCurrentWeather($WeatherCity) 
 {
-    return $WeatherCity.list[0].weather[0].description
+    return $WeatherCity.weather[0].description
 }
