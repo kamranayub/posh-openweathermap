@@ -35,24 +35,24 @@ Set-Alias weather Get-CurrentWeather
 
 # Cmdlets
 
-## `Get-WeatherCity -City <name[,country code]> -ApiKey <appid> -Units <imperial|metric|kelvin>`
+### `Get-WeatherCity -City <name[,country code]> -ApiKey <appid> -Units <imperial|metric|kelvin>`
 
 Returns the raw weather city object from the API for you to do whatever you want. 
 Uses the [Current Weather API](http://openweathermap.org/current).
 
-## `Get-WeatherCityCurrentTemperature -City <WeatherCity> -Units <imperial|metric|kelvin>`
+### `Get-WeatherCityCurrentTemperature -City <WeatherCity> -Units <imperial|metric|kelvin>`
 
 Gets the current temp in the provided weather city object (provided by `Get-WeatherCity`)
 
-## `Get-WeatherCityCurrentWeather -City <WeatherCity>`
+### `Get-WeatherCityCurrentWeather -City <WeatherCity>`
 
 Gets the current weather status (clear, rainy, snowy) in the provided weather city object (provided by `Get-WeatherCity`)
 
-## `Get-WeatherSymbol -Code <weather code>`
+### `Get-WeatherSymbol -Code <weather code>`
 
 Gets a Unicode symbol for the given weather code. Only a limited set available in Windows 10.
 
-## `Write-WeatherBanner -City <name[,country code]> -ApiKey <appid> -Units <imperial|metric|kelvin>`
+### `Write-WeatherBanner -City <name[,country code]> -ApiKey <appid> -Units <imperial|metric|kelvin>`
 
 Displays a colorful banner in the console (useful for startup)
 
