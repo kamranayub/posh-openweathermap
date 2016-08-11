@@ -22,11 +22,15 @@ See **profile.example.ps1** for an example of a profile that write the above out
 # Import weather
 Import-Module OpenWeatherMap
 
-# Replace city and API key
-Write-Host "Weather: " -NoNewline -ForegroundColor Yellow
-Write-WeatherBanner -City Minneapolis -ApiKey xxx
+Function Get-CurrentWeather() {
+    # Replace city and API key
+    Write-WeatherBanner -City Minneapolis -ApiKey xxx
+}
 
-Set-Alias weather Write-WeatherBanner
+Write-Host "Weather: " -NoNewline -ForegroundColor Yellow
+Get-CurrentWeather
+
+Set-Alias weather Get-CurrentWeather
 ```
 
 # Cmdlets
