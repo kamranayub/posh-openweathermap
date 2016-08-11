@@ -32,11 +32,11 @@
     .PARAMETER ApiKey
         Your app ID (API key) from OpenWeatherMap
 #>
-Function Get-WeatherCity([string]$City, [string]$ApiKey) 
+Function Get-WeatherCity([string]$City, [string]$ApiKey, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial') 
 {
     return Invoke-WebRequest `
         -UseBasicParsing `
-        -Uri "http://api.openweathermap.org/data/2.5/weather?q=$City&APPID=$ApiKey&units=imperial" | ConvertFrom-Json
+        -Uri "http://api.openweathermap.org/data/2.5/weather?q=$City&APPID=$ApiKey&units=$Units" | ConvertFrom-Json
 }
 
 <#
@@ -46,9 +46,15 @@ Function Get-WeatherCity([string]$City, [string]$ApiKey)
     .PARAMETER WeatherCity
         The OpenWeatherMap raw city object
 #>
-Function Get-WeatherCityCurrentTemperature($WeatherCity) 
+Function Get-WeatherCityCurrentTemperature($WeatherCity, [string][ValidateSet("imperial","metric")]$Units = 'imperial') 
 {
-    return "$($WeatherCity.main.temp)°F"
+    
+    switch ($Units) {
+        'metric' { $Unit = '°C' }
+        'imperial' { $Unit = '°F' }
+        default { $Unit = 'K' }
+    }
+    return "$($WeatherCity.main.temp)$Unit"
 }
 
 <#
@@ -58,7 +64,58 @@ Function Get-WeatherCityCurrentTemperature($WeatherCity)
     .PARAMETER WeatherCity
         The OpenWeatherMap raw city object
 #>
-Function Get-WeatherCityCurrentWeather($WeatherCity) 
+Function Get-WeatherCityCurrentWeather($WeatherCity, [switch]$Symbol) 
 {
-    return $WeatherCity.weather[0].description
+    if (-not $Symbol) {
+        return $WeatherCity.weather[0].description
+    }
+
+    return Get-WeatherSymbol -Code $WeatherCity.weather[0].id
+}
+
+<#
+    .SYNOPSIS
+        Gets an emoji/Unicode symbol for the given weather condition code
+    .DESCRIPTION
+        Not all emojis are supported in Windows command prompt, these
+        tested fine on Windows 10.
+#>
+Function Get-WeatherSymbol($Code) {
+
+    switch -Wildcard ($Code) {
+        900 { return '🌪' } # Tornado
+        901 { return '🌩' } # Tropical storm
+        902 { return '🌀' } # Hurricane
+        903 { return '❄' } # Cold
+        904 { return '🔥' } # Hot
+        905 { return '🎐' } # Windy
+        9?? { return '☠' } # Extreme
+        800 { return '☀' } # Clear
+        8?? { return '☁' } # Cloudy        
+        7?? { return '🌫' } # Atmosphere
+        6?? { return '☃' } # Snow
+        5?? { return '🌧' } # Rain
+        3?? { return '☂' } # Drizzle
+        2?? { return '🌩' } # Thunderstorm
+        default { return '' }
+    }
+}
+
+<#
+    .SYNOPSIS
+        Writes out a colorful weather banner w/temp and symbol. Great for profile.ps1!
+#>
+Function Write-WeatherBanner($City, $ApiKey, [string][ValidateSet("imperial","metric")]$Units = 'imperial') {
+
+    $WC = Get-WeatherCity -City $City -ApiKey $ApiKey -Units $Units
+    $Temp = Get-WeatherCityCurrentTemperature -WeatherCity $WC -Units $Units
+    $Weather = Get-WeatherCityCurrentWeather -WeatherCity $WC
+    $Symbol = Get-WeatherCityCurrentWeather -WeatherCity $WC -Symbol
+
+    Write-Host $Temp -NoNewline -ForegroundColor Green
+    Write-Host " ($Symbol $Weather)" -NoNewline -ForegroundColor Yellow
+    Write-Host " in " -NoNewline
+    Write-Host $City -ForegroundColor Cyan
+    Write-Host ""
+
 }
