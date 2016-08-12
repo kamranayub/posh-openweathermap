@@ -22,39 +22,70 @@ See **profile.example.ps1** for an example of a profile that write the above out
 # Import weather
 Import-Module OpenWeatherMap
 
-Function Get-CurrentWeather() {
+Function Write-LocalWeatherCurrent() {
     # Replace city and API key
-    Write-WeatherBanner -City Minneapolis -ApiKey xxx
+    Write-WeatherCurrent -City Minneapolis -ApiKey xxx
 }
 
-Write-Host "Weather: " -NoNewline -ForegroundColor Yellow
-Get-CurrentWeather
+Function Write-LocalWeatherForecast($Days = 1) {
+    # Replace city and API key
+    Write-WeatherForecast -City Minneapolis -ApiKey xxx -Days $Days
+}
 
-Set-Alias weather Get-CurrentWeather
+# (optional) Write at startup
+Write-Host "Weather: " -NoNewline -ForegroundColor Yellow
+WriteGet-LocalWeatherCurrent
+
+# Type `weather` in the prompt to see current weather
+Set-Alias weather Write-LocalWeatherCurrent
+# Type `forecast` or `forecast -d 2` to get the current forecast
+Set-Alias forecast Write-LocalWeatherForecast
 ```
 
 # Cmdlets
 
-## `Get-WeatherCity -City <name[,country code]> -ApiKey <appid> -Units <imperial|metric|kelvin>`
+## Raw API Functions
+
+These functions return the raw JSON objects from the OpenWeatherMap API
+
+### `Get-WeatherCurrentRaw -City <name[,country code]> -ApiKey <appid> -Units <imperial|metric|kelvin>`
 
 Returns the raw weather city object from the API for you to do whatever you want. 
 Uses the [Current Weather API](http://openweathermap.org/current).
 
-## `Get-WeatherCityCurrentTemperature -City <WeatherCity> -Units <imperial|metric|kelvin>`
+### `Get-WeatherForecastRaw -City <name[,country code]> -ApiKey <appid> -Units <imperial|metric|kelvin>`
 
-Gets the current temp in the provided weather city object (provided by `Get-WeatherCity`)
+Returns the raw weather city object from the API for you to do whatever you want. 
+Uses the [Current Weather API](http://openweathermap.org/current).
 
-## `Get-WeatherCityCurrentWeather -City <WeatherCity>`
+## Work with API objects
 
-Gets the current weather status (clear, rainy, snowy) in the provided weather city object (provided by `Get-WeatherCity`)
+### `Get-WeatherCityTemperature -City <WeatherCity> -Units <imperial|metric|kelvin>`
 
-## `Get-WeatherSymbol -Code <weather code>`
+Gets the current temp in the provided weather city object (provided by `Get-WeatherCurrentRaw` or `Get-WeatherForecastRaw`)
+
+### `Get-WeatherCityStatus -City <WeatherCity> [-Symbol]`
+
+Gets the current weather status (clear, rainy, snowy) in the provided weather city object (provided by `Get-WeatherCity`).
+Pass in `-Symbol` switch to retrieve the weather symbol for a city.
+
+## Helpful utilities
+
+### `Get-WeatherSymbol -Code <weather code>`
 
 Gets a Unicode symbol for the given weather code. Only a limited set available in Windows 10.
 
-## `Write-WeatherBanner -City <name[,country code]> -ApiKey <appid> -Units <imperial|metric|kelvin>`
+### `Write-WeatherCurrent -City <name[,country code]> -ApiKey <appid> -Units <imperial|metric|kelvin>`
 
 Displays a colorful banner in the console (useful for startup)
+
+### `Write-WeatherForecast -City <name[,country code]> -Days <num> -ApiKey <appid> -Units <imperial|metric|kelvin>`
+
+Displays a colorful weather forecast for given amount of days (including today). Defaults to including tomorrow (1 day).
+
+### `Get-WeatherForecastSummaryForDay -Times <Hashtable[]>`
+
+Summarizes a set of forecasts during a day to the closest one to midday
 
 # License
 

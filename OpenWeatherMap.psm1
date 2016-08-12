@@ -24,15 +24,18 @@
 
 <#
     .SYNOPSIS
-        Gets the raw city object from OpenWeatherMap
+        Gets the raw current weather city object from OpenWeatherMap
     
     .PARAMETER City
-        The name of the city or name and country code (e.g. "Minneapolis" or "Minneapolis,US")
+        The name of the city or name and ISO country code (e.g. "Minneapolis" or "Minneapolis,US")
 
     .PARAMETER ApiKey
         Your app ID (API key) from OpenWeatherMap
+
+    .PARAMETER Units
+        The measurement system for units desired in the response
 #>
-Function Get-WeatherCity([string]$City, [string]$ApiKey, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial') 
+Function Get-WeatherCurrentRaw([string]$City, [string]$ApiKey, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial') 
 {
     return Invoke-WebRequest `
         -UseBasicParsing `
@@ -41,20 +44,109 @@ Function Get-WeatherCity([string]$City, [string]$ApiKey, [string][ValidateSet("i
 
 <#
     .SYNOPSIS
-        Returns the current temperature in the provided OpenWeatherMap city
+        Gets raw weather forecast (3 hour increments/5 day) for given city
+
+    .PARAMETER ApiKey
+        Your app ID (API key) from OpenWeatherMap
+
+    .PARAMETER Units
+        The measurement system for units desired in the response
+#>
+Function Get-WeatherForecastRaw([string]$City, [string]$ApiKey, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial') {
+    return Invoke-WebRequest `
+        -UseBasicParsing `
+        -Uri "http://api.openweathermap.org/data/2.5/forecast?q=$City&APPID=$ApiKey&units=$Units" | ConvertFrom-Json
+}
+
+<#
+    .SYNOPSIS
+        Gets the weather forecast as list of objects with the following properties: Time, Temperature, Weather, WeatherCode, WeatherSymbol
+    
+    .PARAMETER Forecast
+        The raw Forecast object returned from Get-WeatherForecastRaw
+    
+    .PARAMETER Units
+        The measurement system for units desired in the response
+#>
+Function Get-WeatherForecast($Forecast, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial') {
+    $Days = New-Object System.Collections.ArrayList
+
+    ForEach ($_Day in $Forecast.list) 
+    {
+        $MinTemp = (Get-WeatherCityTemperature $_Day -Type Min -Units None)
+        $MaxTemp = (Get-WeatherCityTemperature $_Day -Type Max -Units None)
+        $AvgTemp = (($MaxTemp - $MinTemp)/2) + $MinTemp
+        $UnitMeasure = Get-WeatherUnitMeasurement -Units $Units
+
+        $Day = $_Day | Select-Object -Property `
+        @{ Label = "Time"; Expression = {(Get-DateTimeUtcFromUnix -UnixTimestamp $_.dt)}},
+        @{ Label = "Temperature"; Expression = {"$AvgTemp$UnitMeasure"}},
+        @{ Label = "Weather"; Expression = {$_.weather[0].description}},
+        @{ Label = "WeatherCode"; Expression = {$_.weather[0].id}},
+        @{ Label = "WeatherSymbol"; Expression = {Get-WeatherSymbol -Code $_.weather[0].id}}
+
+        $Days.Add($Day) | Out-Null
+    }
+
+    return $Days
+}
+
+<#
+    .SYNOPSIS
+        Gets a System.DateTime from a Unix timestamp
+
+    .PARAMETER UnixTimestamp
+        The Unix timestamp (seconds from Epoch) in UTC
+#>
+Function Get-DateTimeUtcFromUnix([int]$UnixTimestamp) {
+
+    # Unix epoch
+    $Date = New-Object System.DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, 0, ([System.DateTimeKind]::Utc)
+
+    # Add ms since epoch
+    return ($Date.AddSeconds($UnixTimestamp)).ToLocalTime()
+}
+
+<#
+    .SYNOPSIS
+        Returns the temperature in the provided OpenWeatherMap city
 
     .PARAMETER WeatherCity
         The OpenWeatherMap raw city object
+
+    .PARAMETER Type
+        The type of temperature to retrieve: Current, Min, Max
 #>
-Function Get-WeatherCityCurrentTemperature($WeatherCity, [string][ValidateSet("imperial","metric")]$Units = 'imperial') 
-{
-    
+Function Get-WeatherCityTemperature($WeatherCity, [string][ValidateSet('Current', 'Min', 'Max')]$Type = 'Current', [string][ValidateSet("imperial","metric","kelvin","none")]$Units = 'imperial') 
+{        
+    switch ($Type) {
+        'Current' { $Temp = $WeatherCity.main.temp }
+        'Min' { $Temp = $WeatherCity.main.temp_min }
+        'Max' { $Temp = $WeatherCity.main.temp_max }
+    }
+
+    if ($Units -eq 'none') { 
+        return $Temp
+    } else { 
+        $Unit = Get-WeatherUnitMeasurement -Units $Units
+        return "$Temp$Unit" 
+    }
+}
+
+<#
+    .SYNOPSIS
+        Gets the unit of measure for a given unit type (e.g. degrees Fahrenheit or Celsius)
+
+    .PARAMETER Units
+        The measurement system for units desired in the response
+#>
+Function Get-WeatherUnitMeasurement([string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial') {
     switch ($Units) {
         'metric' { $Unit = '°C' }
         'imperial' { $Unit = '°F' }
         default { $Unit = 'K' }
     }
-    return "$($WeatherCity.main.temp)$Unit"
+    return $Unit
 }
 
 <#
@@ -63,8 +155,11 @@ Function Get-WeatherCityCurrentTemperature($WeatherCity, [string][ValidateSet("i
 
     .PARAMETER WeatherCity
         The OpenWeatherMap raw city object
+
+    .PARAMETER Symbol
+        Whether or not to return the Unicode symbol for a weather code
 #>
-Function Get-WeatherCityCurrentWeather($WeatherCity, [switch]$Symbol) 
+Function Get-WeatherCityStatus($WeatherCity, [switch]$Symbol) 
 {
     if (-not $Symbol) {
         return $WeatherCity.weather[0].description
@@ -79,6 +174,9 @@ Function Get-WeatherCityCurrentWeather($WeatherCity, [switch]$Symbol)
     .DESCRIPTION
         Not all emojis are supported in Windows command prompt, these
         tested fine on Windows 10.
+
+    .PARAMETER Code
+        The API code for the weather condition
 #>
 Function Get-WeatherSymbol($Code) {
 
@@ -104,13 +202,22 @@ Function Get-WeatherSymbol($Code) {
 <#
     .SYNOPSIS
         Writes out a colorful weather banner w/temp and symbol. Great for profile.ps1!
-#>
-Function Write-WeatherBanner($City, $ApiKey, [string][ValidateSet("imperial","metric")]$Units = 'imperial') {
 
-    $WC = Get-WeatherCity -City $City -ApiKey $ApiKey -Units $Units
-    $Temp = Get-WeatherCityCurrentTemperature -WeatherCity $WC -Units $Units
-    $Weather = Get-WeatherCityCurrentWeather -WeatherCity $WC
-    $Symbol = Get-WeatherCityCurrentWeather -WeatherCity $WC -Symbol
+    .PARAMETER City
+        The name of the city or name and ISO country code (e.g. "Minneapolis" or "Minneapolis,US")
+
+    .PARAMETER ApiKey
+        Your app ID (API key) from OpenWeatherMap
+
+    .PARAMETER Units
+        The measurement system for units desired in the response
+#>
+Function Write-WeatherCurrent($City, $ApiKey, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial') {
+
+    $WC = Get-WeatherCurrentRaw -City $City -ApiKey $ApiKey -Units $Units
+    $Temp = Get-WeatherCityTemperature -WeatherCity $WC -Units $Units
+    $Weather = Get-WeatherCityStatus -WeatherCity $WC
+    $Symbol = Get-WeatherCityStatus -WeatherCity $WC -Symbol
 
     Write-Host $Temp -NoNewline -ForegroundColor Green
     Write-Host " ($Symbol $Weather)" -NoNewline -ForegroundColor Yellow
@@ -118,4 +225,70 @@ Function Write-WeatherBanner($City, $ApiKey, [string][ValidateSet("imperial","me
     Write-Host $City -ForegroundColor Cyan
     Write-Host ""
 
+}
+
+<#
+    .SYNOPSIS
+        Writes out a friendly forecast for the provided number of days (including today)
+
+    .PARAMETER City
+        The name of the city or name and ISO country code (e.g. "Minneapolis" or "Minneapolis,US")
+
+    .PARAMETER Days
+        The number of days to include in the forecast (up to 5) in addition to today. Defaults to 1 day.
+
+    .PARAMETER ApiKey
+        Your app ID (API key) from OpenWeatherMap
+
+    .PARAMETER Units
+        The measurement system for units desired in the response        
+#>
+Function Write-WeatherForecast($City, $Days = 1, $ApiKey, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial') {
+
+    $Forecast = Get-WeatherForecastRaw -City $City -ApiKey $ApiKey -Units $Units
+    $ForecastTimes = Get-WeatherForecast $Forecast -Units $Units
+
+    # Group by day
+    $GroupedForecast = $ForecastTimes | Group-Object -Property @{ Expression = { $_.Time.Day }} -AsHashTable
+    $GroupedForecast = $GroupedForecast.GetEnumerator() | Sort-Object -Property Name | Select-Object -First ($Days + 1)
+
+    # Get summary of requested days
+    $PluralDays = if ($Days -eq 1) { "day" } else { "days" }
+    Write-Host "Forecast for " -NoNewLine
+    Write-Host $City -ForegroundColor Cyan -NoNewLine
+    Write-Host " next $Days $($PluralDays):"
+
+    ForEach ($GroupedDay in $GroupedForecast) {
+        $DaySummary = Get-WeatherForecastSummaryForDay -Times $GroupedDay.Value
+                
+        Write-Host "$($DaySummary.Time.ToString('MMM d'))" -NoNewLine -ForegroundColor Magenta
+        Write-Host ": " -NoNewLine
+        Write-Host $DaySummary.Temperature -NoNewline -ForegroundColor Green
+        Write-Host " ($($DaySummary.WeatherSymbol) $($DaySummary.Weather))" -ForegroundColor Yellow                     
+    }
+    Write-Host ""
+}
+
+<#
+    .SYNOPSIS
+        Consolidates a set of same-day forecasts into the one closest to midday
+#>
+Function Get-WeatherForecastSummaryForDay([System.Collections.ArrayList]$Times) {
+    if ($Times.Count -eq 1) {
+        return $Times
+    }
+
+    # Find time closest to midday
+    # Sort by absolute time closest to noon
+    $SortedTimes = $Times | Sort-Object -Property @{ 
+        Expression = {
+            if ($_.Time.Hour -le 12) { 
+                12 - $_.Time.Hour 
+            } else {
+                $_.Time.Hour - 12
+            }
+        }
+    }
+
+    return $SortedTimes[0]
 }
