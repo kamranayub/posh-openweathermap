@@ -73,22 +73,28 @@ Function Get-WeatherForecast($Forecast, [string][ValidateSet("imperial","metric"
 
     ForEach ($_Day in $Forecast.list) 
     {
-        $MinTemp = (Get-WeatherCityTemperature $_Day -Type Min -Units None)
-        $MaxTemp = (Get-WeatherCityTemperature $_Day -Type Max -Units None)
-        $AvgTemp = (($MaxTemp - $MinTemp)/2) + $MinTemp
-        $UnitMeasure = Get-WeatherUnitMeasurement -Units $Units
+        $DayForecast = Get-WeatherForecastItem -ForecastObject $_Day -Units $Units
 
-        $Day = $_Day | Select-Object -Property `
-        @{ Label = "Time"; Expression = {(Get-DateTimeUtcFromUnix -UnixTimestamp $_.dt)}},
-        @{ Label = "Temperature"; Expression = {"$AvgTemp$UnitMeasure"}},
-        @{ Label = "Weather"; Expression = {$_.weather[0].description}},
-        @{ Label = "WeatherCode"; Expression = {$_.weather[0].id}},
-        @{ Label = "WeatherSymbol"; Expression = {Get-WeatherSymbol -Code $_.weather[0].id}}
-
-        $Days.Add($Day) | Out-Null
+        $Days.Add($DayForecast) | Out-Null
     }
 
     return $Days
+}
+
+Function Get-WeatherForecastItem($ForecastObject, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial') {
+    $MinTemp = (Get-WeatherCityTemperature $ForecastObject -Type Min -Units None)
+    $MaxTemp = (Get-WeatherCityTemperature $ForecastObject -Type Max -Units None)
+    $AvgTemp = (($MaxTemp - $MinTemp)/2) + $MinTemp
+    $UnitMeasure = Get-WeatherUnitMeasurement -Units $Units
+
+    $Forecast = $ForecastObject | Select-Object -Property `
+    @{ Label = "Time"; Expression = {(Get-DateTimeUtcFromUnix -UnixTimestamp $_.dt)}},
+    @{ Label = "Temperature"; Expression = {"$AvgTemp$UnitMeasure"}},
+    @{ Label = "Weather"; Expression = {$_.weather[0].description}},
+    @{ Label = "WeatherCode"; Expression = {$_.weather[0].id}},
+    @{ Label = "WeatherSymbol"; Expression = {Get-WeatherSymbol -Code $_.weather[0].id}}
+
+    return $Forecast
 }
 
 <#
@@ -193,6 +199,7 @@ Function Get-WeatherSymbol($Code) {
         7?? { return '🌫' } # Atmosphere
         6?? { return '☃' } # Snow
         5?? { return '🌧' } # Rain
+        4?? { return '🌧' } # Rain
         3?? { return '☂' } # Drizzle
         2?? { return '🌩' } # Thunderstorm
         default { return '' }
@@ -247,7 +254,8 @@ Function Write-WeatherForecast($City, $Days = 1, $ApiKey, [string][ValidateSet("
 
     $Forecast = Get-WeatherForecastRaw -City $City -ApiKey $ApiKey -Units $Units
     $ForecastTimes = Get-WeatherForecast $Forecast -Units $Units
-
+    $Days = [System.Math]::Min(5, $Days)
+    
     # Group by day
     $GroupedForecast = $ForecastTimes | Group-Object -Property @{ Expression = { $_.Time.Day }} -AsHashTable
     $GroupedForecast = $GroupedForecast.GetEnumerator() | Sort-Object -Property Name | Select-Object -First ($Days + 1)

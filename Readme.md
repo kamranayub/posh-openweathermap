@@ -14,6 +14,11 @@ From the [PowerShell Gallery](https://www.powershellgallery.com):
 
 You will need an account on [http://openweathermap.org](http://openweathermap.org) and the API key, it's free to create.
 
+## Unicode Symbols
+
+You may need to use a prompt that supports Unicode characters such as [ConEmu](https://conemu.github.io/) in order to see the weather
+symbols.
+
 ## Example Profile
 
 See **profile.example.ps1** for an example of a profile that write the above output.
@@ -41,6 +46,8 @@ Set-Alias weather Write-LocalWeatherCurrent
 # Type `forecast` or `forecast -d 2` to get the current forecast
 Set-Alias forecast Write-LocalWeatherForecast
 ```
+
+This adds a `weather` and `forecast` alias to your PowerShell profile with local weather.
 
 # Cmdlets
 
@@ -86,6 +93,16 @@ Displays a colorful weather forecast for given amount of days (including today).
 ### `Get-WeatherForecastSummaryForDay -Times <Hashtable[]>`
 
 Summarizes a set of forecasts during a day to the closest one to midday
+
+# Contribute
+
+Run Pester tests:
+
+```powershell
+& .\Run-Tests.ps1
+```
+
+This will install Pester locally to `.modules` folder and run the tests.
 
 # License
 
