@@ -4,6 +4,8 @@ This is a little module to help you get some weather in your Powershell prompt!
 
 ![Example prompt](https://cloud.githubusercontent.com/assets/563819/17579558/757e8af6-5f5c-11e6-887d-87d299a9a8c0.png)
 
+![Forecast](https://cloud.githubusercontent.com/assets/563819/17686219/5443f254-6330-11e6-958d-3c1bbb920fbe.png)
+
 # Install
 
 From the [PowerShell Gallery](https://www.powershellgallery.com):
