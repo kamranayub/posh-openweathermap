@@ -1,9 +1,9 @@
 $PesterVersion = '3.4.2'
 
-# TODO save-module locally
+# Save-module locally
 Save-Module -Name Pester -Path '.modules\' -RequiredVersion $PesterVersion
 
-# TODO copy custom assertions
+# Copy custom assertions
 Copy-Item -Path '.\Assertions\*.ps1' -Destination ".\.modules\Pester\$PesterVersion\Functions\Assertions"
 
 # Import local Pester module so we can extend built-in assertions
