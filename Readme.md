@@ -2,9 +2,7 @@
 
 This is a little module to help you get some weather in your Powershell prompt!
 
-![Example prompt](https://cloud.githubusercontent.com/assets/563819/17579558/757e8af6-5f5c-11e6-887d-87d299a9a8c0.png)
-
-![Forecast](https://cloud.githubusercontent.com/assets/563819/17686219/5443f254-6330-11e6-958d-3c1bbb920fbe.png)
+![Example](https://cloud.githubusercontent.com/assets/563819/17722041/ab4372a4-63f4-11e6-8b7f-bd8e4a60a4d3.png)
 
 # Install
 
@@ -23,33 +21,49 @@ symbols.
 
 ## Example Profile
 
-See **profile.example.ps1** for an example of a profile that write the above output.
+See **profile.example.ps1** for an example of a profile that writes the above output. 
+See [How to customize your PowerShell profile](http://www.howtogeek.com/50236/customizing-your-powershell-profile/).
 
 ```powershell
-# Import weather
-Import-Module OpenWeatherMap
+# Import module from current folder
+Import-Module .\OpenWeatherMap
 
-Function Write-LocalWeatherCurrent() {
+# Import weather from global module path ($env:PSModulePath)
+# Import-Module OpenWeatherMap
+
+Function Write-LocalWeatherCurrent([switch]$Inline) {
     # Replace city and API key
-    Write-WeatherCurrent -City Minneapolis -ApiKey xxx
+    Write-WeatherCurrent -City Minneapolis -ApiKey xxx -Units imperial -Inline:$Inline
 }
 
 Function Write-LocalWeatherForecast($Days = 1) {
     # Replace city and API key
-    Write-WeatherForecast -City Minneapolis -ApiKey xxx -Days $Days
+    Write-WeatherForecast -City Minneapolis -ApiKey xxx -Units imperial -Days $Days
 }
 
-# (optional) Write at startup
+# EXAMPLE: Write at startup
 Write-Host "Weather: " -NoNewline -ForegroundColor Yellow
-WriteGet-LocalWeatherCurrent
+Write-LocalWeatherCurrent
 
 # Type `weather` in the prompt to see current weather
 Set-Alias weather Write-LocalWeatherCurrent
 # Type `forecast` or `forecast -d 2` to get the current forecast
 Set-Alias forecast Write-LocalWeatherForecast
+
+# EXAMPLE: Override prompt and include inline weather
+Function Prompt() {
+    # Write current dir
+    Write-Host ($PWD) -NoNewline -ForegroundColor Red
+    # Write inline weather
+    Write-LocalWeatherCurrent -Inline
+    Write-Host "›" -NoNewline -ForegroundColor Gray
+
+    return ' '
+}
 ```
 
-This adds a `weather` and `forecast` alias to your PowerShell profile with local weather.
+This adds a `weather` and `forecast` alias to your PowerShell profile with local weather. It also shows how to override the
+built-in prompt to add an inline weather banner.
 
 # Cmdlets
 
@@ -84,9 +98,9 @@ Pass in `-Symbol` switch to retrieve the weather symbol for a city.
 
 Gets a Unicode symbol for the given weather code. Only a limited set available in Windows 10.
 
-### `Write-WeatherCurrent -City <name[,country code]> -ApiKey <appid> -Units <imperial|metric|kelvin>`
+### `Write-WeatherCurrent -City <name[,country code]> -ApiKey <appid> -Units <imperial|metric|kelvin> [-Inline]`
 
-Displays a colorful banner in the console (useful for startup)
+Displays a colorful banner in the console (useful for startup). The `-Inline` switch makes it compact for use in the prompt.
 
 ### `Write-WeatherForecast -City <name[,country code]> -Days <num> -ApiKey <appid> -Units <imperial|metric|kelvin>`
 

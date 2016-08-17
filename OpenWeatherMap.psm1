@@ -219,19 +219,25 @@ Function Get-WeatherSymbol($Code) {
     .PARAMETER Units
         The measurement system for units desired in the response
 #>
-Function Write-WeatherCurrent($City, $ApiKey, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial') {
+Function Write-WeatherCurrent($City, $ApiKey, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial', [Switch]$Inline) {
 
     $WC = Get-WeatherCurrentRaw -City $City -ApiKey $ApiKey -Units $Units
     $Temp = Get-WeatherCityTemperature -WeatherCity $WC -Units $Units
     $Weather = Get-WeatherCityStatus -WeatherCity $WC
     $Symbol = Get-WeatherCityStatus -WeatherCity $WC -Symbol
 
-    Write-Host $Temp -NoNewline -ForegroundColor Green
-    Write-Host " ($Symbol $Weather)" -NoNewline -ForegroundColor Yellow
-    Write-Host " in " -NoNewline
-    Write-Host $City -ForegroundColor Cyan
-    Write-Host ""
-
+    if (-not $Inline) {
+        Write-Host $Temp -NoNewline -ForegroundColor Green
+        Write-Host " ($Symbol $Weather)" -NoNewline -ForegroundColor Yellow
+        Write-Host " in " -NoNewline
+        Write-Host $City -ForegroundColor Cyan
+        Write-Host ""
+    } else {
+        Write-Host ' [' -NoNewline -ForegroundColor Yellow
+        Write-Host "$Symbol " -NoNewline -ForegroundColor Green
+        Write-Host $Temp -NoNewline -ForegroundColor Green    
+        Write-Host '] ' -NoNewline -ForegroundColor Yellow
+    }
 }
 
 <#
