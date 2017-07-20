@@ -2,7 +2,7 @@
 
 This is a little module to help you get some weather in your Powershell prompt!
 
-![Example](https://cloud.githubusercontent.com/assets/563819/17722041/ab4372a4-63f4-11e6-8b7f-bd8e4a60a4d3.png)
+![Example](https://user-images.githubusercontent.com/563819/28435471-a7393996-6d58-11e7-8cf2-3ec500b13aa1.png)
 
 # Install
 
@@ -14,10 +14,9 @@ From the [PowerShell Gallery](https://www.powershellgallery.com):
 
 You will need an account on [http://openweathermap.org](http://openweathermap.org) and the API key, it's free to create.
 
-## Unicode Symbols
+## Emoji Icons
 
-You may need to use a prompt that supports Unicode characters such as [ConEmu](https://conemu.github.io/) in order to see the weather
-symbols.
+You may need to use a prompt that supports emoji characters such as [Visual Studio Code](http://code.visualstudio.com) but [ConEmu](https://conemu.github.io/) will fallback to plain symbols ([vote it up](https://github.com/Maximus5/ConEmu/issues/554)!).
 
 ## Example Profile
 
