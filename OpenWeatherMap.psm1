@@ -212,21 +212,21 @@ Function Get-WeatherCityStatus($WeatherCity, [switch]$Symbol)
 Function Get-WeatherSymbol($Code) {
 
     switch -Wildcard ($Code) {
-        900 { return '🌪' } # Tornado
-        901 { return '🌩' } # Tropical storm
+        900 { return '🌪️' } # Tornado
+        901 { return '🌊' } # Tropical storm
         902 { return '🌀' } # Hurricane
-        903 { return '❄' } # Cold
+        903 { return '❄️' } # Cold
         904 { return '🔥' } # Hot
-        905 { return '🎐' } # Windy
-        9?? { return '☠' } # Extreme
-        800 { return '☀' } # Clear
-        8?? { return '☁' } # Cloudy        
-        7?? { return '🌫' } # Atmosphere
-        6?? { return '☃' } # Snow
-        5?? { return '🌧' } # Rain
-        4?? { return '🌧' } # Rain
-        3?? { return '☂' } # Drizzle
-        2?? { return '🌩' } # Thunderstorm
+        905 { return '💨' } # Windy
+        9?? { return '💀' } # Extreme
+        800 { return '☀️' } # Clear
+        8?? { return '☁️' } # Cloudy        
+        7?? { return '🌫️' } # Atmosphere
+        6?? { return '⛄' } # Snow
+        5?? { return '🌧️' } # Rain
+        4?? { return '🌧️' } # Rain
+        3?? { return '☂️' } # Drizzle
+        2?? { return '🌩️' } # Thunderstorm
         default { return '' }
     }
 }
