@@ -14,7 +14,9 @@ From the [PowerShell Gallery](https://www.powershellgallery.com):
 
 You will need an account on [http://openweathermap.org](http://openweathermap.org) and the API key, it's free to create.
 
-## Emoji Icons
+## Emoji Support
+
+![Emojis](https://user-images.githubusercontent.com/563819/28435358-3690234e-6d58-11e7-9bf4-16bedf1177f6.png)
 
 You may need to use a prompt that supports emoji characters such as [Visual Studio Code](http://code.visualstudio.com) but [ConEmu](https://conemu.github.io/) will fallback to plain symbols ([vote it up](https://github.com/Maximus5/ConEmu/issues/554)!).
 
