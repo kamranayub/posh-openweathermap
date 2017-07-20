@@ -71,12 +71,12 @@ built-in prompt to add an inline weather banner.
 
 These functions return the raw JSON objects from the OpenWeatherMap API
 
-### `Get-WeatherCurrentRaw -City <name[,country code]> -ApiKey <appid> -Units <imperial|metric|kelvin>`
+### `Get-WeatherCurrentRaw -City <name[,country code]> -ApiKey <appid> -Units <imperial|metric|kelvin> [-Proxy <uri>] [-ProxyCredential <PSCredential] [-ProxyUseDefaultCredentials]`
 
 Returns the raw weather city object from the API for you to do whatever you want. 
 Uses the [Current Weather API](http://openweathermap.org/current).
 
-### `Get-WeatherForecastRaw -City <name[,country code]> -ApiKey <appid> -Units <imperial|metric|kelvin>`
+### `Get-WeatherForecastRaw -City <name[,country code]> -ApiKey <appid> -Units <imperial|metric|kelvin> [-Proxy <uri>] [-ProxyCredential <PSCredential] [-ProxyUseDefaultCredentials]`
 
 Returns the raw weather city object from the API for you to do whatever you want. 
 Uses the [Current Weather API](http://openweathermap.org/current).

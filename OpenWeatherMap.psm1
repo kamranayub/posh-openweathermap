@@ -34,12 +34,24 @@
 
     .PARAMETER Units
         The measurement system for units desired in the response
+
+    .PARAMETER Proxy
+        A proxy URI to pass to Invoke-WebRequest
+
+    .PARAMETER ProxyCredential
+        A proxy credential to pass to Invoke-WebRequest
+
+    .PARAMETER ProxyUseDefaultCredentials
+        Whether to use default proxy credentials for Invoke-WebRequest
 #>
-Function Get-WeatherCurrentRaw([string]$City, [string]$ApiKey, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial') 
+Function Get-WeatherCurrentRaw([string]$City, [string]$ApiKey, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial', [uri]$Proxy, [PSCredential]$ProxyCredential, [switch]$ProxyUseDefaultCredentials) 
 {
     return Invoke-WebRequest `
         -UseBasicParsing `
-        -Uri "http://api.openweathermap.org/data/2.5/weather?q=$City&APPID=$ApiKey&units=$Units" | ConvertFrom-Json
+        -Uri "http://api.openweathermap.org/data/2.5/weather?q=$City&APPID=$ApiKey&units=$Units" `
+        -Proxy $Proxy `
+        -ProxyCredential $ProxyCredential `
+        -ProxyUseDefaultCredentials:$ProxyUseDefaultCredentials | ConvertFrom-Json
 }
 
 <#
@@ -51,11 +63,24 @@ Function Get-WeatherCurrentRaw([string]$City, [string]$ApiKey, [string][Validate
 
     .PARAMETER Units
         The measurement system for units desired in the response
+
+    .PARAMETER Proxy
+        A proxy URI to pass to Invoke-WebRequest
+
+    .PARAMETER ProxyCredential
+        A proxy credential to pass to Invoke-WebRequest
+
+    .PARAMETER ProxyUseDefaultCredentials
+        Whether to use default proxy credentials for Invoke-WebRequest
 #>
-Function Get-WeatherForecastRaw([string]$City, [string]$ApiKey, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial') {
+Function Get-WeatherForecastRaw([string]$City, [string]$ApiKey, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial', [uri]$Proxy, [PSCredential]$ProxyCredential, [switch]$ProxyUseDefaultCredentials) {
+    
     return Invoke-WebRequest `
         -UseBasicParsing `
-        -Uri "http://api.openweathermap.org/data/2.5/forecast?q=$City&APPID=$ApiKey&units=$Units" | ConvertFrom-Json
+        -Uri "http://api.openweathermap.org/data/2.5/forecast?q=$City&APPID=$ApiKey&units=$Units" `
+        -Proxy $Proxy `
+        -ProxyCredential $ProxyCredential `
+        -ProxyUseDefaultCredentials:$ProxyUseDefaultCredentials | ConvertFrom-Json
 }
 
 <#
@@ -73,7 +98,7 @@ Function Get-WeatherForecast($Forecast, [string][ValidateSet("imperial","metric"
 
     ForEach ($_Day in $Forecast.list) 
     {
-        $DayForecast = Get-WeatherForecastItem -ForecastObject $_Day -Units $Units
+        $DayForecast = Get-WeatherForecastItem -ForecastObject $_Day -Units $Units -Proxy $Proxy
 
         $Days.Add($DayForecast) | Out-Null
     }
@@ -81,7 +106,7 @@ Function Get-WeatherForecast($Forecast, [string][ValidateSet("imperial","metric"
     return $Days
 }
 
-Function Get-WeatherForecastItem($ForecastObject, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial') {
+Function Get-WeatherForecastItem($ForecastObject, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial', [uri]$Proxy) {
     $MinTemp = (Get-WeatherCityTemperature $ForecastObject -Type Min -Units None)
     $MaxTemp = (Get-WeatherCityTemperature $ForecastObject -Type Max -Units None)
     $AvgTemp = (($MaxTemp - $MinTemp)/2) + $MinTemp
@@ -218,10 +243,13 @@ Function Get-WeatherSymbol($Code) {
 
     .PARAMETER Units
         The measurement system for units desired in the response
-#>
-Function Write-WeatherCurrent($City, $ApiKey, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial', [Switch]$Inline) {
 
-    $WC = Get-WeatherCurrentRaw -City $City -ApiKey $ApiKey -Units $Units
+    .PARAMETER Proxy
+        A proxy URI to pass to Invoke-WebRequest
+#>
+Function Write-WeatherCurrent($City, $ApiKey, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial', [uri]$Proxy, [Switch]$Inline) {
+
+    $WC = Get-WeatherCurrentRaw -City $City -ApiKey $ApiKey -Units $Units -Proxy $Proxy
     $Temp = Get-WeatherCityTemperature -WeatherCity $WC -Units $Units
     $Weather = Get-WeatherCityStatus -WeatherCity $WC
     $Symbol = Get-WeatherCityStatus -WeatherCity $WC -Symbol
@@ -256,9 +284,9 @@ Function Write-WeatherCurrent($City, $ApiKey, [string][ValidateSet("imperial","m
     .PARAMETER Units
         The measurement system for units desired in the response        
 #>
-Function Write-WeatherForecast($City, $Days = 1, $ApiKey, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial') {
+Function Write-WeatherForecast($City, $Days = 1, $ApiKey, [string][ValidateSet("imperial","metric","kelvin")]$Units = 'imperial', [uri]$Proxy) {
 
-    $Forecast = Get-WeatherForecastRaw -City $City -ApiKey $ApiKey -Units $Units
+    $Forecast = Get-WeatherForecastRaw -City $City -ApiKey $ApiKey -Units $Units -Proxy $Proxy
     $ForecastTimes = Get-WeatherForecast $Forecast -Units $Units
     $Days = [System.Math]::Min(5, $Days)
     
